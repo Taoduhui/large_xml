@@ -1,6 +1,6 @@
 name: large_xml
 description: A pure dart library for large xml.
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/Taoduhui/large_xml
 
 environment:

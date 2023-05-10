@@ -240,7 +240,6 @@ extension XmlStringExtension on String{
     start = findNodeNameEnd(start) + 1;
     end = end - 1;
     for(int i=start;i<=end;i++){
-      var t = substring(i);
       if(this[i] == " " || this[i] == "/" || this[i] == ">"){
         continue;
       }
