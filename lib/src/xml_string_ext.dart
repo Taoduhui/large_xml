@@ -1,169 +1,181 @@
 part of 'xml_core.dart';
 
-extension XmlStringExtension on String{
-
-  String? namespace(){
-    var idx = indexOf(":");
-    if(idx == -1){
-      return null;
-    }
-    return substring(0,idx);
+extension XmlStringExtension on String {
+  /// recovery `< > & ' \`
+  String decode() {
+    return replaceAll("&lt;", "<")
+        .replaceAll("&gt;", ">")
+        .replaceAll("&amp;", "&")
+        .replaceAll("&apos;", "'")
+        .replaceAll("&quot;", "\"");
   }
 
-  String removeNamespace(){
+  /// get namespace part
+  String? namespace() {
     var idx = indexOf(":");
-    if(idx == -1){
+    if (idx == -1) {
+      return null;
+    }
+    return substring(0, idx);
+  }
+
+  /// remove namespace part
+  String removeNamespace() {
+    var idx = indexOf(":");
+    if (idx == -1) {
       return this;
     }
     return substring(idx + 1);
   }
 
-  int findEndQuotation(int start){
+  int _findEndQuotation(int start) {
     var type = this[start];
-    for(int i=start + 1;i<length;i++){
-      if(this[i] == type){
+    for (int i = start + 1; i < length; i++) {
+      if (this[i] == type) {
         return i;
       }
     }
-    throw(Exception("unquoted element, start:$start"));
+    throw (Exception("unquoted element, start:$start"));
   }
 
-  int findDoubleQuotationBackward(int end){
+  int _findDoubleQuotationBackward(int end) {
     var type = this[end];
-    for(int i=end - 1;i>=0;i--){
-      if(this[i] == type){
+    for (int i = end - 1; i >= 0; i--) {
+      if (this[i] == type) {
         return i;
       }
     }
-    throw(Exception("unquoted element, end:$end"));
+    throw (Exception("unquoted element, end:$end"));
   }
 
-  int findNormalElementEnd(int start){
-    for(int i=start + 1;i<length;i++){
-      if(this[i] == "\""){
-        i = findEndQuotation(i);
+  int _findNormalElementEnd(int start) {
+    for (int i = start + 1; i < length; i++) {
+      if (this[i] == "\"") {
+        i = _findEndQuotation(i);
         continue;
       }
-      if(this[i] == ">"){
+      if (this[i] == ">") {
         return i;
       }
     }
-    throw(Exception("missing >, start:$start"));
+    throw (Exception("missing >, start:$start"));
   }
 
-  int findNormalElementStart(int end){
-    for(int i=end - 1;i>=0;i--){
-      if(this[i] == "\""){
-        i = findDoubleQuotationBackward(i);
+  int _findNormalElementStart(int end) {
+    for (int i = end - 1; i >= 0; i--) {
+      if (this[i] == "\"") {
+        i = _findDoubleQuotationBackward(i);
         continue;
       }
-      if(this[i] == "<"){
+      if (this[i] == "<") {
         return i;
       }
     }
-    throw(Exception("missing <, end:$end"));
+    throw (Exception("missing <, end:$end"));
   }
 
-  int indexBackward(String str,[int? end]){
-    var _end = end ?? (length - 1);
+  int indexBackward(String str, [int? end]) {
+    end = end ?? (length - 1);
     var strLastIdx = str.length - 1;
-    for(var i = _end; i >= strLastIdx;i--){
+    for (var i = end; i >= strLastIdx; i--) {
       bool matched = true;
-      for(var c = strLastIdx;c>=0;c--){
-        if(this[i - (strLastIdx - c)] != str[c]){
+      for (var c = strLastIdx; c >= 0; c--) {
+        if (this[i - (strLastIdx - c)] != str[c]) {
           matched = false;
           break;
         }
       }
-      if(matched){
+      if (matched) {
         return i - strLastIdx;
       }
     }
     return -1;
   }
 
-  int findCommentElementStart(int end){
-    var start = indexBackward("<!--",end);
-    if(start == -1){
-      throw(Exception("missing Comment start element <!--, end:$end"));
+  int _findCommentElementStart(int end) {
+    var start = indexBackward("<!--", end);
+    if (start == -1) {
+      throw (Exception("missing Comment start element <!--, end:$end"));
     }
     return start;
   }
 
-  int findCommentElementEnd(int start){
-    var end = indexOf("-->",start);
-    if(end == -1){
-      throw(Exception("missing Comment end element -->, start:$start"));
+  int _findCommentElementEnd(int start) {
+    var end = indexOf("-->", start);
+    if (end == -1) {
+      throw (Exception("missing Comment end element -->, start:$start"));
     }
     return end + 2;
   }
 
-  int findCDATAElementStart(int end){
-    var start = indexBackward("<![CDATA[",end);
-    if(start == -1){
-      throw(Exception("missing CDATA start element <![CDATA[, end:$end"));
+  int _findCDATAElementStart(int end) {
+    var start = indexBackward("<![CDATA[", end);
+    if (start == -1) {
+      throw (Exception("missing CDATA start element <![CDATA[, end:$end"));
     }
     return start;
   }
 
-  int findCDATAElementEnd(int start){
-    var end = indexOf("]]>",start);
-    if(end == -1){
-      throw(Exception("missing CDATA end element ]]>, start:$start"));
+  int _findCDATAElementEnd(int start) {
+    var end = indexOf("]]>", start);
+    if (end == -1) {
+      throw (Exception("missing CDATA end element ]]>, start:$start"));
     }
     return end + 2;
   }
 
-  int findProcessingInstructionElementStart(int end){
-    var start = indexBackward("<?",end);
-    if(start == -1){
-      throw(Exception("missing processing instruction start element <?, end:$end"));
+  int _findProcessingInstructionElementStart(int end) {
+    var start = indexBackward("<?", end);
+    if (start == -1) {
+      throw (Exception(
+          "missing processing instruction start element <?, end:$end"));
     }
     return start;
   }
 
-  int findProcessingInstructionElementEnd(int start){
-    var end = indexOf("?>",start);
-    if(end == -1){
-      throw(Exception("missing processing instruction end element ?>, start:$start"));
+  int _findProcessingInstructionElementEnd(int start) {
+    var end = indexOf("?>", start);
+    if (end == -1) {
+      throw (Exception(
+          "missing processing instruction end element ?>, start:$start"));
     }
     return end + 1;
   }
 
-  int findDTDElementStart(int end){
-    for(int i=end-1;i>=0;i--){
-      if(this[i] == ">"){
-        i = findNormalElementStart(i);
-      }else if(this[i] == "<"){
+  int _findDTDElementStart(int end) {
+    for (int i = end - 1; i >= 0; i--) {
+      if (this[i] == ">") {
+        i = _findNormalElementStart(i);
+      } else if (this[i] == "<") {
         return i;
       }
     }
-    throw(Exception("missing >, end:$end"));
+    throw (Exception("missing >, end:$end"));
   }
 
-  int findDTDElementEnd(int start){
-    for(int i=start + 2;i<length;i++){
-      if(this[i] == "<"){
-        i = findNormalElementEnd(i);
-      }else if(this[i] == ">"){
+  int _findDTDElementEnd(int start) {
+    for (int i = start + 2; i < length; i++) {
+      if (this[i] == "<") {
+        i = _findNormalElementEnd(i);
+      } else if (this[i] == ">") {
         return i;
       }
     }
-    throw(Exception("missing >, start:$start"));
+    throw (Exception("missing >, start:$start"));
   }
 
-  int findParentNodeStart(int start){
-    for(int i=start - 1;i>=0;i--){
-      if(this[i] == ">"){
-        if(this[i - 1] == "/"){
-          i = findNodeStart(i);
+  int _findParentNodeStart(int start) {
+    for (int i = start - 1; i >= 0; i--) {
+      if (this[i] == ">") {
+        if (this[i - 1] == "/") {
+          i = _findNodeStart(i);
           continue;
-        }else{
-          var type = getXmlElementTypeBySuffix(i);
-          if(type == XmlElementType.NormalStart){
-            return findElementStart(i);
-          }else{
-            i = findNodeStart(i);
+        } else {
+          var type = _getXmlElementTypeBySuffix(i);
+          if (type == XmlElementType.start) {
+            return _findElementStart(i);
+          } else {
+            i = _findNodeStart(i);
             continue;
           }
         }
@@ -172,11 +184,11 @@ extension XmlStringExtension on String{
     return -1;
   }
 
-  int findInnerNodeStart(int start){
-    var end = findNormalElementEnd(start);
-    for(var i=end + 1;i<length;i++){
-      if(this[i] == "<"){
-        if(this[i+1] == "/"){
+  int _findInnerNodeStart(int start) {
+    var end = _findNormalElementEnd(start);
+    for (var i = end + 1; i < length; i++) {
+      if (this[i] == "<") {
+        if (this[i + 1] == "/") {
           return -1;
         }
         return i;
@@ -185,11 +197,11 @@ extension XmlStringExtension on String{
     return -1;
   }
 
-  int findParallelNodeStart(int start){
-    var end = findNodeEnd(start);
-    for(var i=end + 1;i<length;i++){
-      if(this[i] == "<"){
-        if(this[i+1] == "/"){
+  int _findParallelNodeStart(int start) {
+    var end = _findNodeEnd(start);
+    for (var i = end + 1; i < length; i++) {
+      if (this[i] == "<") {
+        if (this[i + 1] == "/") {
           return -1;
         }
         return i;
@@ -198,209 +210,239 @@ extension XmlStringExtension on String{
     return -1;
   }
 
-  int findElementStart(int end,[XmlElementType? type]){
-    var _type = type ?? getXmlElementTypeBySuffix(end);
-    switch(_type){
-      case XmlElementType.NormalStart:return findNormalElementStart(end);
-      case XmlElementType.ProcessingInstruction:return findProcessingInstructionElementStart(end);
-      case XmlElementType.Comment:return findCommentElementStart(end);
-      case XmlElementType.CDATA:return findCDATAElementStart(end);
-      case XmlElementType.DTD:return findDTDElementStart(end);
-      case XmlElementType.NormalEnd:return findNormalElementStart(end);
-      case XmlElementType.Unknown:return -1;
+  int _findElementStart(int end, [XmlElementType? type]) {
+    type = type ?? _getXmlElementTypeBySuffix(end);
+    switch (type) {
+      case XmlElementType.start:
+        return _findNormalElementStart(end);
+      case XmlElementType.pi:
+        return _findProcessingInstructionElementStart(end);
+      case XmlElementType.comment:
+        return _findCommentElementStart(end);
+      case XmlElementType.cdata:
+        return _findCDATAElementStart(end);
+      case XmlElementType.dtd:
+        return _findDTDElementStart(end);
+      case XmlElementType.end:
+        return _findNormalElementStart(end);
+      case XmlElementType.unknown:
+        return -1;
     }
   }
 
-  int findElementEnd(int start,[XmlElementType? type]){
-    var _type = type ?? getXmlElementType(start);
-    switch(_type){
-      case XmlElementType.NormalStart:return findNormalElementEnd(start);
-      case XmlElementType.ProcessingInstruction:return findProcessingInstructionElementEnd(start);
-      case XmlElementType.Comment:return findCommentElementEnd(start);
-      case XmlElementType.CDATA:return findCDATAElementEnd(start);
-      case XmlElementType.DTD:return findDTDElementEnd(start);
-      case XmlElementType.NormalEnd:return findNormalElementEnd(start);
-      case XmlElementType.Unknown:throw Exception("unknown node type");
+  int _findElementEnd(int start, [XmlElementType? type]) {
+    type = type ?? _getXmlElementType(start);
+    switch (type) {
+      case XmlElementType.start:
+        return _findNormalElementEnd(start);
+      case XmlElementType.pi:
+        return _findProcessingInstructionElementEnd(start);
+      case XmlElementType.comment:
+        return _findCommentElementEnd(start);
+      case XmlElementType.cdata:
+        return _findCDATAElementEnd(start);
+      case XmlElementType.dtd:
+        return _findDTDElementEnd(start);
+      case XmlElementType.end:
+        return _findNormalElementEnd(start);
+      case XmlElementType.unknown:
+        throw Exception("unknown node type");
     }
   }
 
-  int findNodeNameEnd(int start){
-    var area = indexOf(RegExp("[ >]"),start);
-    if(area == -1){
+  int _findNodeNameEnd(int start) {
+    var area = indexOf(RegExp("[ >]"), start);
+    if (area == -1) {
       return -1;
     }
-    if(this[area] == ">" && this[area-1] == "/"){
+    if (this[area] == ">" && this[area - 1] == "/") {
       return area - 2;
     }
     return area - 1;
   }
 
-  Map<String,String> parseAttributes(int start,int end){
-    Map<String,String> map = {};
-    start = findNodeNameEnd(start) + 1;
+  Map<String, String> _parseAttributes(int start, int end) {
+    Map<String, String> map = {};
+    start = _findNodeNameEnd(start) + 1;
     end = end - 1;
-    for(int i=start;i<=end;i++){
-      if(this[i] == " " || this[i] == "/" || this[i] == ">"){
+    for (int i = start; i <= end; i++) {
+      if (this[i] == " " || this[i] == "/" || this[i] == ">") {
         continue;
       }
-      var keyEndIdx = indexOf(RegExp("[ =]"),i);
-      var key = substring(i,keyEndIdx);
-      var quotaIdx = indexOf("\"",i);
-      var quotaEndIdx = findEndQuotation(quotaIdx);
-      var value = substring(quotaIdx + 1,quotaEndIdx);
+      var keyEndIdx = indexOf(RegExp("[ =]"), i);
+      var key = substring(i, keyEndIdx);
+      var quotaIdx = indexOf("\"", i);
+      var quotaEndIdx = _findEndQuotation(quotaIdx);
+      var value = substring(quotaIdx + 1, quotaEndIdx);
       map[key] = value;
       i = quotaEndIdx;
     }
     return map;
   }
 
-  int findNodeStart(int end){
+  int _findNodeStart(int end) {
     int pair = 0;
-    for(int i=end;i>=0;i--){
-      if(this[i] != ">"){
+    for (int i = end; i >= 0; i--) {
+      if (this[i] != ">") {
         continue;
       }
-      var type = getXmlElementTypeBySuffix(i);
-      if(type == XmlElementType.NormalStart){
-        if(this[i-1] != "/"){
+      var type = _getXmlElementTypeBySuffix(i);
+      if (type == XmlElementType.start) {
+        if (this[i - 1] != "/") {
           pair++;
         }
-      }else if(type == XmlElementType.NormalEnd){
+      } else if (type == XmlElementType.end) {
         pair--;
       }
-      i = findElementStart(i,type);
-      if(pair == 0){
+      i = _findElementStart(i, type);
+      if (pair == 0) {
         return i;
       }
     }
     return -1;
   }
 
-  int findNodeEnd(int start){
+  int _findNodeEnd(int start) {
     int pair = 0;
-    for(int i=start;i<length;i++){
-      if(this[i] != "<"){
+    for (int i = start; i < length; i++) {
+      if (this[i] != "<") {
         continue;
       }
-      var type = getXmlElementType(i);
-      i = findElementEnd(i,type);
-      if(type == XmlElementType.NormalEnd){
+      var type = _getXmlElementType(i);
+      i = _findElementEnd(i, type);
+      if (type == XmlElementType.end) {
         pair--;
-      }else if(type == XmlElementType.NormalStart){
-        if(this[i - 1] != "/"){
+      } else if (type == XmlElementType.start) {
+        if (this[i - 1] != "/") {
           pair++;
         }
       }
-      if(pair == 0){
+      if (pair == 0) {
         return i;
       }
     }
     return -1;
   }
 
-  XmlElementType getXmlElementTypeBySuffix(int end){
-    switch(this[end]){
-      case ">":{
-        switch(this[end - 1]){
-          case "?":{
-            // ?>: Processing instruction.
-            return XmlElementType.ProcessingInstruction;
-          }
-          case "-":{
-            // Probably --> for a comment.
-            return XmlElementType.Comment;
-          }
-          case "]":{
-            // Probably <![CDATA[...]]>
-            if(this[end - 2] == "]"){
-              return XmlElementType.CDATA;
-            }
-            return XmlElementType.DTD;
-          }
-          default:{
-            var start = findNormalElementStart(end);
-            var type = getXmlElementType(start);
-            switch(type){
-              case XmlElementType.NormalStart:return XmlElementType.NormalStart;
-              case XmlElementType.NormalEnd:return XmlElementType.NormalEnd;
-              default:return XmlElementType.Unknown;
-            }
+  XmlElementType _getXmlElementTypeBySuffix(int end) {
+    switch (this[end]) {
+      case ">":
+        {
+          switch (this[end - 1]) {
+            case "?":
+              {
+                // ?>: Processing instruction.
+                return XmlElementType.pi;
+              }
+            case "-":
+              {
+                // Probably --> for a comment.
+                return XmlElementType.comment;
+              }
+            case "]":
+              {
+                // Probably <![CDATA[...]]>
+                if (this[end - 2] == "]") {
+                  return XmlElementType.cdata;
+                }
+                return XmlElementType.dtd;
+              }
+            default:
+              {
+                var start = _findNormalElementStart(end);
+                var type = _getXmlElementType(start);
+                switch (type) {
+                  case XmlElementType.start:
+                    return XmlElementType.start;
+                  case XmlElementType.end:
+                    return XmlElementType.end;
+                  default:
+                    return XmlElementType.unknown;
+                }
+              }
           }
         }
-      }
     }
-    return XmlElementType.Unknown;
+    return XmlElementType.unknown;
   }
 
-  XmlElementType getXmlElementType(int start){
-    switch(this[start]){
-      case "<":{
-        switch(this[start + 1]){
-          case "?":{
-            // <?: Processing instruction.
-            return XmlElementType.ProcessingInstruction;
-          }
-          case "/":{
-            // </: End element
-            return XmlElementType.NormalEnd;
-          }
-          case "!":{
-            // <!: Maybe comment, maybe CDATA.
-            switch(this[start + 2]){
-              case "-":{
-                // Probably <!-- for a comment.
-                return XmlElementType.Comment;
+  XmlElementType _getXmlElementType(int start) {
+    switch (this[start]) {
+      case "<":
+        {
+          switch (this[start + 1]) {
+            case "?":
+              {
+                // <?: Processing instruction.
+                return XmlElementType.pi;
               }
-              case "[":{
-                // Probably <![CDATA[.
-                return XmlElementType.CDATA;
+            case "/":
+              {
+                // </: End element
+                return XmlElementType.end;
               }
-              default:{
-                // Probably DTD, such as <!DOCTYPE ...>
-                return XmlElementType.DTD;
+            case "!":
+              {
+                // <!: Maybe comment, maybe CDATA.
+                switch (this[start + 2]) {
+                  case "-":
+                    {
+                      // Probably <!-- for a comment.
+                      return XmlElementType.comment;
+                    }
+                  case "[":
+                    {
+                      // Probably <![CDATA[.
+                      return XmlElementType.cdata;
+                    }
+                  default:
+                    {
+                      // Probably DTD, such as <!DOCTYPE ...>
+                      return XmlElementType.dtd;
+                    }
+                }
               }
-            }
-          }
-          default:{
-            return XmlElementType.NormalStart;
+            default:
+              {
+                return XmlElementType.start;
+              }
           }
         }
-      }
     }
-    return XmlElementType.Unknown;
+    return XmlElementType.unknown;
   }
 
-  int indexInRange(String str,{int start = 0,int? end}){
+  int _indexInRange(String str, {int start = 0, int? end}) {
     end ??= length - 1;
-    for(int i=start;i<end;i++){
+    for (int i = start; i < end; i++) {
       bool matched = true;
-      for(int c=0;c<str.length;c++){
-        if(this[i + c] != str[c]){
+      for (int c = 0; c < str.length; c++) {
+        if (this[i + c] != str[c]) {
           matched = false;
           break;
         }
       }
-      if(matched){
+      if (matched) {
         return i;
       }
     }
     return -1;
   }
 
-  String insertAfter(String str,int index){
-    var str1 = substring(0,index + 1);
+  String _insertAfter(String str, int index) {
+    var str1 = substring(0, index + 1);
     var str2 = substring(index + 1);
     return "$str1$str$str2";
   }
 
-  String insertBefore(String str,int index){
-    var str1 = substring(0,index);
+  String _insertBefore(String str, int index) {
+    var str1 = substring(0, index);
     var str2 = substring(index);
     return "$str1$str$str2";
   }
 
-  String remove(int start,int end){
-    var str1 = substring(0,start);
+  String _remove(int start, int end) {
+    var str1 = substring(0, start);
     var str2 = substring(end);
     return "$str1$str2";
   }

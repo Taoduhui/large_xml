@@ -61,14 +61,14 @@ var root = XmlDocument.root;
 
 // find first normal start element in root chilren
 // return <person/> node
-var person = doc.root.into(type: XmlElementType.NormalStart);
+var person = doc.root.into(type: XmlElementType.start);
 if(person == null){
   print("node not found");
 }
 
 // find first normal start element in root chilren and node name is "info"
 // return <info/> node
-var info = doc.root.into(selector: (n)=>n.type == XmlElementType.NormalStart && n.name == "info");
+var info = doc.root.into(selector: (n)=>n.type == XmlElementType.start && n.name == "info");
 if(info == null){
   print("node not found");
 }
@@ -78,39 +78,39 @@ if you want to get the parallel node referece, you can invoke `node.next()`
 
 ```dart
 var root = XmlDocument.root;
-var person = doc.root.into(type: XmlElementType.NormalStart)!;
+var person = doc.root.into(type: XmlElementType.start)!;
 
 // find first normal start element after person node
 // return <x:script/> node
-var script = person.next(type: XmlElementType.NormalStart);
+var script = person.next(type: XmlElementType.start);
 if(script == null){
   print("node not found");
 }
 
 // find first normal start element in root chilren and node name is "info"
 // return <info/> node
-var info = doc.root.next(selector: (n)=>n.type == XmlElementType.NormalStart && n.name == "info");
+var info = doc.root.next(selector: (n)=>n.type == XmlElementType.start && n.name == "info");
 if(info == null){
   print("node not found");
 }
 
 // find first normal start element after person node and node name is "script", ignore namespace
 // return <x:script/> node
-script = doc.root.next(selector: (n)=>n.type == XmlElementType.NormalStart && n.name.removeNamespace() == "script");
+script = doc.root.next(selector: (n)=>n.type == XmlElementType.start && n.name.removeNamespace() == "script");
 if(script == null){
   print("node not found");
 }
 
 // find first normal start element after person node and namespace is "x"
 // return <x:script/> node
-script = doc.root.next(selector: (n)=>n.type == XmlElementType.NormalStart && n.name.namespace() == "x");
+script = doc.root.next(selector: (n)=>n.type == XmlElementType.start && n.name.namespace() == "x");
 if(script == null){
   print("node not found");
 }
 
 // find first normal start element after person node and specified whole match "x:script"
 // return <x:script/> node
-script = doc.root.next(selector: (n)=>n.type == XmlElementType.NormalStart && n.name == "x:script");
+script = doc.root.next(selector: (n)=>n.type == XmlElementType.start && n.name == "x:script");
 if(script == null){
   print("node not found");
 }
@@ -136,7 +136,7 @@ directly get attribute's value like this
 
 ```dart
 var root = XmlDocument.root;
-var person = doc.root.into(type: XmlElementType.NormalStart)!;
+var person = doc.root.into(type: XmlElementType.start)!;
 
 // directly get attribute's value
 // getAttribute(key) you can pass specified or unspecified namespace attribute key,such as "id" or "x:id" or ":id"
@@ -163,7 +163,7 @@ otherwise you should re-find it by `node.getAttributeNode`.
 
 ```dart
 var root = XmlDocument.root;
-var person = doc.root.into(type: XmlElementType.NormalStart)!;
+var person = doc.root.into(type: XmlElementType.start)!;
 
 XmlAttribute id = person.getAttributeNode(":id")!;
 print(id.key); // x:id
@@ -197,10 +197,10 @@ this is a correct usage example
 var root = XmlDocument.root;
 
 var person = doc.root
-  .into(type: XmlElementType.NormalStart)!
+  .into(type: XmlElementType.start)!
   .mount(); // mounted
 var info = doc.root
-  .next(selector: (n)=>n.type == XmlElementType.NormalStart && n.name == "info")!
+  .next(selector: (n)=>n.type == XmlElementType.start && n.name == "info")!
   .mount(); // mounted
 
 person.addAttribute("nattr");
@@ -219,10 +219,10 @@ wrong usage
 var root = XmlDocument.root;
 
 var person = doc.root
-  .into(type: XmlElementType.NormalStart)!
+  .into(type: XmlElementType.start)!
   .mount(); // mounted
 var info = doc.root
-  .next(selector: (n)=>n.type == XmlElementType.NormalStart && n.name == "info")!; // unmounted
+  .next(selector: (n)=>n.type == XmlElementType.start && n.name == "info")!; // unmounted
 
 person.addAttribute("nattr");
 // after person node write action
@@ -254,7 +254,7 @@ here is a example about how to create a new node
 ```dart
 var root = XmlDocument.root;
 var person = doc.root
-  .into(type: XmlElementType.NormalStart)!
+  .into(type: XmlElementType.start)!
   .mount();
 
 XmlNodeInstance inst = XmlNode.create("new");
@@ -272,10 +272,10 @@ you can copy a node to a `XmlNodeInstance` object
 ```dart
 var root = XmlDocument.root;
 var person = doc.root
-  .into(type: XmlElementType.NormalStart)!
+  .into(type: XmlElementType.start)!
   .mount();
 var info = doc.root
-  .next(selector: (n)=>n.type == XmlElementType.NormalStart && n.name == "info")!
+  .next(selector: (n)=>n.type == XmlElementType.start && n.name == "info")!
   .mount();
 
 XmlNodeInstance copy = info.copy();
