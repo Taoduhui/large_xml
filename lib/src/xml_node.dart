@@ -64,11 +64,7 @@ class XmlNodeInstance {
   }
 }
 
-/// ============ALERT==============
-///
-/// `XmlAttribute` should not be cached
-///
-/// ============ALERT==============
+/// **[NOTICE]** `XmlAttribute` should not be cached
 ///
 /// this is a temp object
 ///
@@ -212,9 +208,6 @@ class XmlNode {
         if (modifiedStart <= _detail!.beginElementEnd) {
           _detail!.beginElementEnd += modifiedLength;
         }
-        if (modifiedStart <= _detail!.beginElementStart) {
-          _detail!.beginElementStart += modifiedLength;
-        }
       }
     } else if (modifiedStart < start ||
         (modifiedStart == start && modifiedLength > 0)) {
@@ -266,34 +259,52 @@ class XmlNode {
     return null;
   }
 
+  int _indexOfAttributeKey(String key) {
+    var keyIdx = -1;
+    if (key.startsWith("*")) {
+      //match key like *id
+      var realKey = key.substring(1);
+      keyIdx = document.raw._indexInRange(" $realKey",
+          start: detail.beginElementStart, end: detail.beginElementEnd);
+
+      // not found none namespace attribute which has same key
+      // guessed the namespace is omitted
+      // match the first node which has same key and has namespace
+      if (keyIdx == -1) {
+        keyIdx = document.raw._indexInRange(":$realKey",
+            start: detail.beginElementStart, end: detail.beginElementEnd);
+        keyIdx = document.raw.indexBackward(" ", keyIdx);
+      }
+    } else if (key.contains(":")) {
+      // specified namespace
+      keyIdx = document.raw._indexInRange(key,
+          start: detail.beginElementStart, end: detail.beginElementEnd);
+    } else {
+      // unspecified namespace
+
+      // find none namespace attribute
+      keyIdx = document.raw._indexInRange(" $key",
+          start: detail.beginElementStart, end: detail.beginElementEnd);
+    }
+    return keyIdx;
+  }
+
   /// is this node has attribute named key
   ///
-  /// you can pass specified or unspecified namespace attribute key,such as "id" or "x:id" or ":id"
+  /// parameter key should like these
   ///
-  /// if you pass key like ":id", it will try to find a attribute which named 'id' and has a namespace
+  /// "id" or "x:id" or ":id" or "*id"
+  ///
+  /// - "id" no namespace named "id" attribute
+  ///
+  /// - "x:id" namespace is "x" and name is "id"
+  ///
+  /// - ":id" has a namespace and name is "id"
+  ///
+  /// - "*id" just name is "id"
   bool containsAttribute(String key) {
     if (detail.type == XmlElementType.start) {
-      var keyIdx = 0;
-      if (key.contains(":")) {
-        // specified namespace
-        keyIdx = document.raw._indexInRange(" $key",
-            start: detail.beginElementStart, end: detail.beginElementEnd);
-      } else {
-        // unspecified namespace
-
-        // find none namespace attribute first
-        keyIdx = document.raw._indexInRange(" $key",
-            start: detail.beginElementStart, end: detail.beginElementEnd);
-
-        // not found none namespace attribute which has same key
-        // guessed the namespace is omitted
-        // match the first node which has same key and has namespace
-        if (keyIdx == -1) {
-          keyIdx = document.raw._indexInRange(":$key",
-              start: detail.beginElementStart, end: detail.beginElementEnd);
-          keyIdx = document.raw.indexBackward(" ", keyIdx);
-        }
-      }
+      var keyIdx = _indexOfAttributeKey(key);
       if (keyIdx == -1) {
         return false;
       }
@@ -302,38 +313,29 @@ class XmlNode {
     return false;
   }
 
-  /// ============ALERT==============
-  ///
-  /// `XmlAttribute` should not be cached
-  ///
-  /// ============ALERT==============
+  /// **[NOTICE]** `XmlAttribute` should not be cached
   ///
   /// once read should be dropped immediately
   ///
   /// after any writing operation, all `XmlAttribute` will point at wrong position
+  ///
+  /// parameter key should like these
+  ///
+  /// "id" or "x:id" or ":id" or "*id"
+  ///
+  /// - "id" no namespace named "id" attribute
+  ///
+  /// - "x:id" namespace is "x" and name is "id"
+  ///
+  /// - ":id" has a namespace and name is "id"
+  ///
+  /// - "*id" just name is "id"
   XmlAttribute? getAttributeNode(String key) {
     if (detail.type == XmlElementType.start) {
       var attr = XmlAttribute(this);
-      if (key.contains(":")) {
-        // specified namespace
-        attr.keyIdx = document.raw._indexInRange(" $key",
-            start: detail.beginElementStart, end: detail.beginElementEnd);
-      } else {
-        // unspecified namespace
 
-        // find none namespace attribute first
-        attr.keyIdx = document.raw._indexInRange(" $key",
-            start: detail.beginElementStart, end: detail.beginElementEnd);
+      attr.keyIdx = _indexOfAttributeKey(key);
 
-        // not found none namespace attribute which has same key
-        // guessed the namespace is omitted
-        // match the first node which has same key and has namespace
-        if (attr.keyIdx == -1) {
-          attr.keyIdx = document.raw._indexInRange(":$key",
-              start: detail.beginElementStart, end: detail.beginElementEnd);
-          attr.keyIdx = document.raw.indexBackward(" ", attr.keyIdx);
-        }
-      }
       if (attr.keyIdx == -1) {
         return null;
       }
@@ -361,6 +363,18 @@ class XmlNode {
   }
 
   /// directly get node attribute value
+  ///
+  /// parameter key should like these
+  ///
+  /// "id" or "x:id" or ":id" or "*id"
+  ///
+  /// - "id" no namespace named "id" attribute
+  ///
+  /// - "x:id" namespace is "x" and name is "id"
+  ///
+  /// - ":id" has a namespace and name is "id"
+  ///
+  /// - "*id" just name is "id"
   String? getAttribute(String key) {
     if (detail.type == XmlElementType.start) {
       var attr = getAttributeNode(key);

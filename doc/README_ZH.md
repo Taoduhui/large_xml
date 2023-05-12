@@ -1,12 +1,12 @@
 # large_xml
 
-a pure dart library for reading, writing large xml
+一个用于解析、更新大型XML的纯dart库
 
-## Usage
+## 使用
 
-### Sample XML
+### XML示例
 
-all example code will use this xml string
+接下来的实例代码中都将使用这段XML作为演示
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -27,21 +27,21 @@ all example code will use this xml string
 </root>
 ```
 
-### Getting Started 
+### 开始使用
 
-first, you need create a XmlDocument Object
+首先需要创建一个`XmlDocument`对象
 
-this object holding your xml string and dynamicly update mounted `XmlNode`
+这个对象持有你的XML字符串并动态更新挂载的`XmlNode`
 
-then, you can access Xml's root xml node
+创建完毕后，你可以通过`root`属性获取到根节点
 
-**NOTICE**: if you want to cache the xml node
+**注意**: 如果你希望缓存一个`XmlNode`以便长期使用
 
-you **MUST** invoke `node.mount()`, mount the node to `XmlDocument`
+你**必须**要调用`node.mount()`，将这个节点挂载到`XmlDocument`上
 
-so that `XmlDocument` can dynamicly update this `XmlNode`'s pointer when the XML raw string changing.
+这样`XmlDocument`才能在文档变更时对节点进行更新
 
-you should invoke `node.unmount()` when the node is unnecessary
+当你不再使用时，应当调用`node.unmount()`以释放资源
 
 ```dart
 import 'package:large_xml/large_xml.dart';
@@ -50,81 +50,81 @@ var doc = XmlDocument.fromString(xmlstr);
 var root = XmlDocument.root;
 ```
 
-### Finding Node
+### 搜索Node
 
-now we have a `root` node referece object
+现在我们有了一个`root`节点
 
-if you want to get the child node referece, you can invoke `node.into()`
+你可以通过`node.into()`来获得子节点的引用
 
 ```dart
 var root = XmlDocument.root;
 
-// find first normal start element in root chilren
-// return <person/> node
+// 找到第一个元素类型是start的子节点
+// 此处返回 <person/> 节点
 var person = doc.root.into(type: XmlElementType.start);
 if(person == null){
   print("node not found");
 }
 
-// find first normal start element in root chilren and node name is "info"
-// return <info/> node
+// 找到第一个元素类型是start且节点名是info的子节点
+// 此处返回  <info/> 节点
 var info = doc.root.into(selector: (n)=>n.type == XmlElementType.start && n.name == "info");
 if(info == null){
   print("node not found");
 }
 ```
 
-if you want to get the parallel node referece, you can invoke `node.next()`
+你可以使用`node.next()`获取平行节点的下一个节点
 
 ```dart
 var root = XmlDocument.root;
 var person = doc.root.into(type: XmlElementType.start)!;
 
-// find first normal start element after person node
-// return <x:script/> node
+// 找到person节点后第一个元素类型是start的节点
+// 此处返回 <x:script/> 节点
 var script = person.next(type: XmlElementType.start);
 if(script == null){
   print("node not found");
 }
 
-// find first normal start element in root chilren and node name is "info"
-// return <info/> node
+// 找到person节点后第一个元素类型是start且节点名是info的节点
+// 此处返回 <info/> 节点
 var info = doc.root.next(selector: (n)=>n.type == XmlElementType.start && n.name == "info");
 if(info == null){
   print("node not found");
 }
 
-// find first normal start element after person node and node name is "script", ignore namespace
-// return <x:script/> node
+// 找到person节点后第一个元素类型是start，忽略命名空间节点名是script的节点
+// 此处返回 <x:script/> 节点
 script = doc.root.next(selector: (n)=>n.type == XmlElementType.start && n.name.removeNamespace() == "script");
 if(script == null){
   print("node not found");
 }
 
-// find first normal start element after person node and namespace is "x"
-// return <x:script/> node
+// 找到person节点后第一个元素类型是start，命名空间是x的节点
+// 此处返回 <x:script/> 节点
 script = doc.root.next(selector: (n)=>n.type == XmlElementType.start && n.name.namespace() == "x");
 if(script == null){
   print("node not found");
 }
 
-// find first normal start element after person node and specified whole match "x:script"
-// return <x:script/> node
+// 找到person节点后第一个元素类型是start，名称完全匹配x:script的节点
+// 此处返回 <x:script/> 节点
 script = doc.root.next(selector: (n)=>n.type == XmlElementType.start && n.name == "x:script");
 if(script == null){
   print("node not found");
 }
 ```
 
-if you want to get the ancestor node referece, you can invoke `node.findAncestor()`
+你可以通过`node.findAncestor()`搜索祖先节点
 
-like `into()` and `next()`, it also support `type` and `selector`
+与`into()`和`next()`类似，`node.findAncestor()`同样支持`type` 和 `selector`
 
-and you can easily get node's parent node by `node.parent`
+你可以通过 `node.parent`来获取当前节点的父节点
 
-### Node Attribute
+### 节点属性
 
-you can use following method to access node's attribute
+你可以通过以下方法访问属性
 
 - `node.containsAttribute`
 - `node.getAttribute`
@@ -132,38 +132,38 @@ you can use following method to access node's attribute
 - `node.getAttributeNode`
 - `node.addAttribute`
 
-directly get attribute's value like this
+直接获取属性值
 
 ```dart
 var root = XmlDocument.root;
 var person = doc.root.into(type: XmlElementType.start)!;
 
-// directly get attribute's value
-// parameter key should like these
-// "id" or "x:id" or ":id" or "*id"
-// - "id" no namespace named "id" attribute
-// - "x:id" namespace is "x" and name is "id"
-// - ":id" has a namespace and name is "id"
-// - "*id" just name is "id"
+// 直接获取属性值
+// 参数支持以下形式
+// "id" "x:id" ":id" "*id"
+// - "id" 无命名空间的id属性
+// - "x:id" 命名空间为x的id属性
+// - ":id" 有命名空间的id属性
+// - "*id" id属性，无论是否有命名空间
 String? id = person.getAttribute(":id");
 if(id != null){
-  // should be attribute r:id
+  // 此处为 r:id
   print(id);
 }
 ```
 
-if you want to update attribute, use `node.getAttributeNode`, you will get a `XmlAttribute` object
+如果您想更新属性，请使用`node.getAttributeNode`，它将返回一个`XmlAttribute`对象。
 
-**NOTICE**: `XmlAttribute` should not be cached
-it should be dropped immediately
-after any writing operation, all `XmlAttribute` will point at wrong position
+**注意**：`XmlAttribute`不应该被缓存，应该立即删除，
+在任何写入操作后，所有的`XmlAttribute`对象都将指向错误的位置
 
-if you make sure that there will be no write action while holding this object, then you can keep it.
+如果您确定在持有该对象期间不会执行任何写入操作，则可以保留它。
 
-*tips*：`attr.setAttribute` will update it self, you can still keep it after `setAttribute`
+提示：`attr.setAttribute`会自行更新，您可以在`setAttribute`之后保留它。
 
-some method support chain invoke, you can keep the object in a chain
-otherwise you should re-find it by `node.getAttributeNode`.
+一些方法支持链式调用，您可以在链式调用中保留该对象，
+否则您需要通过`node.getAttributeNode`重新查找它。
+
 
 ```dart
 var root = XmlDocument.root;
@@ -172,8 +172,8 @@ var person = doc.root.into(type: XmlElementType.start)!;
 XmlAttribute id = person.getAttributeNode(":id")!;
 print(id.key); // x:id
 
-// id.namepace should be http://schemas.openxmlformats.org/package/2006/relationships
-// it will lookup it ancestors and find first matched "xmlns:r" definition
+// id.namespace应该是http://schemas.openxmlformats.org/package/2006/relationships
+// 它将查找它的祖先节点并找到第一个匹配的“xmlns:r”定义
 print(id.namespace);
 
 print(value); // 2
@@ -186,15 +186,15 @@ id.remove();
 person.addAttribute("nattr")!;
 print(person.containsAttribute("nattr")); // true
 
-// you can get attributes map like this
+// 你可以像这样获取一个属性map
 Map<String,String> attrs = person.getAttributes();
 ```
 
-### Node Cache
+### Node缓存
 
-if you want to holding a node
+如果你打算缓存一个节点
 
-this is a correct usage example
+以下是正确的使用方法
 
 ```dart
 //root is defaultly mounted
@@ -216,7 +216,7 @@ info.unmount();// release
 return;
 ```
 
-wrong usage
+错误的使用方法
 
 ```dart
 //root is defaultly mounted
@@ -229,8 +229,8 @@ var info = doc.root
   .next(selector: (n)=>n.type == XmlElementType.start && n.name == "info")!; // unmounted
 
 person.addAttribute("nattr");
-// after person node write action
-// info node still keep the origin pointer, so it will write the attribute on wrong position
+// 在person节点写入操作后，
+// info节点仍然保留原始指针，所以这里会在错误的位置写入属性
 info.addAttribute("nattr");
 
 person.unmount();// release
@@ -238,23 +238,23 @@ person.unmount();// release
 return;
 ```
 
-### Node Write
+### Node写入
 
-you can use following method to add, remove, and copy a node
+您可以使用以下方法来添加、删除和复制节点：
 
 - `XmlNode.create`
 - `node.remove`
 - `node.copy`
 
-and all writing action is depending on `XmlNodeInstance` object
+所有的写入操作都依赖于`XmlNodeInstance`对象
 
-it has following method:
+它拥有以下方法：
 
 - `inst.pasteBefore`
 - `inst.pasteAfter`
 - `inst.pasteInner`
 
-here is a example about how to create a new node
+下面是一个关于如何创建一个新节点的示例：
 ```dart
 var root = XmlDocument.root;
 var person = doc.root
@@ -263,15 +263,15 @@ var person = doc.root
 
 XmlNodeInstance inst = XmlNode.create("new");
 var newNode = inst.pasteBefore(person).mount();
-// xml will be changed like this
+// xml将会被改成像下面的样子
 // <root>
-//    <new/> <-- new node will be add before person node
+//    <new/> <-- new节点会被添加到person节点前
 //    <person/>
 //    ...
 // </root>
 ```
 
-you can copy a node to a `XmlNodeInstance` object
+您可以将节点复制到一个`XmlNodeInstance`对象中。
 
 ```dart
 var root = XmlDocument.root;
@@ -284,10 +284,10 @@ var info = doc.root
 
 XmlNodeInstance copy = info.copy();
 var newNode = inst.pasteInner(person).mount();
-// xml will be changed like this
+//  xml将会被改成像下面的样子
 // <root>
 //    <person>
-//      <info> <-- copy to here
+//      <info> <-- 节点被复制到此处
 //        <child/>
 //      </info>
 //    </person>

@@ -1,4 +1,10 @@
 # Changelog
+
+## [1.1.0] 2023-5-10
+### Added
+
+- Node attribute general(*) index method
+
 ## [1.0.3] 2023-5-10
 ### Fixed
 

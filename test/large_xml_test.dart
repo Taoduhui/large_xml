@@ -104,18 +104,28 @@ void main() {
     var attributes = person.getAttributes();
     expect(attributes.length, 3);
     expect(attributes["age"], "1");
+    expect(attributes["age"], "1");
     expect(attributes["r:id"], "2");
     expect(attributes["x:id"], "3");
     expect(person.containsAttribute("age"), isTrue);
+    expect(person.containsAttribute("*age"), isTrue);
+    expect(person.containsAttribute(":age"), isFalse);
     expect(person.containsAttribute("r:id"), isTrue);
     expect(person.containsAttribute("x:id"), isTrue);
-    expect(person.containsAttribute("id"), isTrue);
+    expect(person.containsAttribute("y:id"), isFalse);
+    expect(person.containsAttribute(":id"), isTrue);
+    expect(person.containsAttribute("*id"), isTrue);
 
-    var id = person.getAttribute("id");
-    expect(id != null, isTrue);
-    expect(id, "2");
+    expect(person.getAttribute(":id"), "2");
+    expect(person.getAttribute("*id"), "2");
+    expect(person.getAttribute("r:id"), "2");
+    expect(person.getAttribute("x:id"), "3");
 
-    var idNode = person.getAttributeNode("id");
+    expect(person.getAttribute("age"), "1");
+    expect(person.getAttribute("*age"), "1");
+    expect(person.getAttribute(":age"), null);
+
+    var idNode = person.getAttributeNode("*id");
     expect(idNode != null, isTrue);
     expect(idNode!.key.namespace(), "r");
     expect(idNode.key.removeNamespace(), "id");
@@ -218,6 +228,17 @@ void main() {
     newNode = newNodeInst.pasteBefore(info);
     expect(newNode.name, "new");
     newNode = script.next(type: XmlElementType.start)!;
+    expect(root.name, "root");
+    expect(person.name, "person");
+    expect(info.name, "info");
+    expect(child.name, "child");
+    expect(newNode.name, "new");
+    expect(script.name, "x:script");
+
+    newNode.remove();
+    newNode = newNodeInst.pasteInner(person);
+    expect(newNode.name, "new");
+    newNode = person.into(type: XmlElementType.start)!;
     expect(root.name, "root");
     expect(person.name, "person");
     expect(info.name, "info");
