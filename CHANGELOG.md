@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.1] 2023-5-14
+### Change
+
+- change XmlNode Detail properties access method to getter
+
+
 ## [1.1.0] 2023-5-10
 ### Added
 

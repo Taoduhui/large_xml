@@ -215,6 +215,7 @@ void main() {
     expect(info.name, "info");
     expect(child.name, "child");
     expect(newNode.name, "new");
+    expect(script.name, "x:script");
     newNode = person.next(type: XmlElementType.start)!;
     expect(newNode.name, "new");
 

@@ -3,15 +3,47 @@ part of 'xml_core.dart';
 enum XmlElementType { start, pi, comment, cdata, dtd, end, unknown }
 
 class XmlNodeDetail {
-  late int beginElementStart;
-  late int beginElementEnd;
-  late int endElementStart;
-  late int endElementEnd;
-  late XmlElementType type;
+  XmlNode node;
+
+  XmlNodeDetail(this.node);
+
+  int? _beginElementStart;
+  int? _beginElementEnd;
+  int? _endElementStart;
+  int? _endElementEnd;
+  XmlElementType? _type;
+
+  int get beginElementStart {
+    _beginElementStart ??= node.start;
+    return _beginElementStart!;
+  }
+
+  int get beginElementEnd {
+    _beginElementEnd ??=
+        node.document.raw._findElementEnd(beginElementStart, node.type);
+    return _beginElementEnd!;
+  }
+
+  int get endElementStart {
+    _endElementStart ??=
+        node.document.raw._findElementStart(endElementEnd, type);
+    return _endElementStart!;
+  }
+
+  int get endElementEnd {
+    _endElementEnd = node.document.raw._findNodeEnd(node.start);
+    return _endElementEnd!;
+  }
+
+  XmlElementType get type {
+    _type ??= node.document.raw._getXmlElementType(node.start);
+    return _type!;
+  }
 }
 
 class XmlNodeInstance {
   String raw;
+
   XmlNodeInstance(this.raw);
 
   /// write this node before target node
@@ -73,6 +105,7 @@ class XmlNodeInstance {
 /// after any writing operation, all `XmlAttribute` will point at wrong position
 class XmlAttribute {
   XmlNode node;
+
   XmlAttribute(this.node);
 
   late int keyIdx;
@@ -141,7 +174,7 @@ class XmlNode {
 
   /// node detail info
   XmlNodeDetail get detail {
-    _detail ??= _parseDetail(document, start);
+    _detail ??= XmlNodeDetail(this);
     return _detail!;
   }
 
@@ -175,10 +208,10 @@ class XmlNode {
   void remove() {
     unmount();
     removed = true;
-    document.raw = document.raw
-        ._remove(detail.beginElementStart, detail.endElementEnd + 1);
     document._update(detail.beginElementStart,
         -(detail.endElementEnd - detail.beginElementStart + 1));
+    document.raw = document.raw
+        ._remove(detail.beginElementStart, detail.endElementEnd + 1);
   }
 
   /// create a XmlNodeInstance holding of this node's outerXML
@@ -199,24 +232,40 @@ class XmlNode {
   bool _update(int modifiedStart, int modifiedLength) {
     if (modifiedStart > start) {
       if (_detail != null) {
-        if (modifiedStart <= _detail!.endElementEnd) {
-          _detail!.endElementEnd += modifiedLength;
+        if (_detail!._endElementEnd != null &&
+            modifiedStart <= _detail!.endElementEnd) {
+          _detail!._endElementEnd = _detail!._endElementEnd! + modifiedLength;
         }
-        if (modifiedStart <= _detail!.endElementStart) {
-          _detail!.endElementStart += modifiedLength;
+        if (_detail!._endElementStart != null &&
+            modifiedStart <= _detail!.endElementStart) {
+          _detail!._endElementStart =
+              _detail!._endElementStart! + modifiedLength;
         }
-        if (modifiedStart <= _detail!.beginElementEnd) {
-          _detail!.beginElementEnd += modifiedLength;
+        if (_detail!._beginElementEnd != null &&
+            modifiedStart <= _detail!.beginElementEnd) {
+          _detail!._beginElementEnd =
+              _detail!._beginElementEnd! + modifiedLength;
         }
       }
     } else if (modifiedStart < start ||
         (modifiedStart == start && modifiedLength > 0)) {
       start += modifiedLength;
       if (_detail != null) {
-        _detail!.beginElementStart += modifiedLength;
-        _detail!.beginElementEnd += modifiedLength;
-        _detail!.endElementStart += modifiedLength;
-        _detail!.endElementEnd += modifiedLength;
+        if (_detail!._beginElementStart != null) {
+          _detail!._beginElementStart =
+              _detail!._beginElementStart! + modifiedLength;
+        }
+        if (_detail!._beginElementEnd != null) {
+          _detail!._beginElementEnd =
+              _detail!._beginElementEnd! + modifiedLength;
+        }
+        if (_detail!._endElementStart != null) {
+          _detail!._endElementStart =
+              _detail!._endElementStart! + modifiedLength;
+        }
+        if (_detail!._endElementEnd != null) {
+          _detail!._endElementEnd = _detail!._endElementEnd! + modifiedLength;
+        }
       }
     } else if (modifiedStart == start && modifiedLength < 0) {
       removed = true;
@@ -505,17 +554,5 @@ class XmlNode {
   /// decoded innerXML
   String get value {
     return innerXML.decode();
-  }
-
-  static XmlNodeDetail _parseDetail(XmlDocument document, int start) {
-    var detail = XmlNodeDetail();
-    detail.type = document.raw._getXmlElementType(start);
-    detail.beginElementStart = start;
-    detail.endElementEnd = document.raw._findNodeEnd(start);
-    detail.beginElementEnd =
-        document.raw._findElementEnd(detail.beginElementStart, detail.type);
-    detail.endElementStart =
-        document.raw._findElementStart(detail.endElementEnd, detail.type);
-    return detail;
   }
 }
