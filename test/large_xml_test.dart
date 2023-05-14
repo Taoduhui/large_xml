@@ -38,12 +38,20 @@ void main() {
     var dtd = pi.next()!;
     expect(dtd.type, XmlElementType.dtd);
     expect(dtd.outerXML.trim(), '<!DOCTYPE root>');
+    var info = doc.root.into(
+        selector: (n) => n.type == XmlElementType.start && n.name == "info")!.mount();
     var child = doc.root
         .into(
             selector: (n) =>
                 n.type == XmlElementType.start && n.name == "info")!
-        .into(type: XmlElementType.start)!;
+        .into(type: XmlElementType.start)!.mount();
     expect(child.value.trim(), "<n k=\"v\" t='v'/>");
+    child.innerValue = "";
+    expect(info.name, "info");
+    expect(child.value.trim(), "");
+    child.innerValue = "<n k=\"v\" t='v'/>";
+    expect(child.innerXML, "&lt;n k=&quot;v&quot; t=&apos;v&apos;/&gt;");
+    expect(info.name, "info");
   });
 
   test('XmlNode inner', () {
@@ -276,5 +284,14 @@ void main() {
     expect(infoCopy.name, "info");
     var childCopy = infoCopy.into(type: XmlElementType.start)!;
     expect(childCopy.name, "child");
+
+    var infoCutInst = infoCopy.cut();
+    expect(info.into(selector: (c)=> c.type == XmlElementType.start && c.name == "info"), null);
+    infoCutInst.pasteInner(info);
+    var infoCut = info.into(type: XmlElementType.start)!;
+    expect(infoCut.name, "info");
+    var childCut = infoCopy.into(type: XmlElementType.start)!;
+    expect(childCut.name, "child");
+
   });
 }

@@ -1,7 +1,14 @@
 # Changelog
 
+## [1.2.0] 2023-5-14
+### Added
+
+- add XmlNode innerXML setter
+- add XmlNode cut method
+
+
 ## [1.1.1] 2023-5-14
-### Change
+### Changed
 
 - change XmlNode Detail properties access method to getter
 

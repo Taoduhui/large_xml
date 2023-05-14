@@ -219,6 +219,13 @@ class XmlNode {
     return XmlNodeInstance(outerXML);
   }
 
+  /// create a XmlNodeInstance holding of this node's outerXML and remove origin node
+  XmlNodeInstance cut() {
+    var inst = XmlNodeInstance(outerXML);
+    remove();
+    return inst;
+  }
+
   /// create a `XmlNodeInstance` holding new node xml string
   /// you need to paste it
   static XmlNodeInstance create(String name) {
@@ -549,6 +556,18 @@ class XmlNode {
           .substring(detail.beginElementEnd + 1, detail.endElementStart);
     }
     return "";
+  }
+
+  set innerXML(String v) {
+    if (detail.type == XmlElementType.start) {
+      document.raw = document.raw._remove(detail.beginElementEnd + 1, detail.endElementStart);
+      document.raw = document.raw._insertAfter(v, detail.beginElementEnd);
+      document._update(detail.beginElementEnd + 1, v.length - detail.endElementStart + detail.beginElementEnd + 1);
+    }
+  }
+
+  set innerValue(String v){
+    innerXML = v.encode();
   }
 
   /// decoded innerXML

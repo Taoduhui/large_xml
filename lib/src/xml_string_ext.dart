@@ -1,6 +1,15 @@
 part of 'xml_core.dart';
 
 extension XmlStringExtension on String {
+  /// repace `< > & ' \`
+  String encode() {
+    return replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("'", "&apos;")
+        .replaceAll("\"", "&quot;");
+  }
+
   /// recovery `< > & ' \`
   String decode() {
     return replaceAll("&lt;", "<")
