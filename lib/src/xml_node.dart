@@ -552,8 +552,12 @@ class XmlNode {
   /// ```
   String get innerXML {
     if (detail.type == XmlElementType.start) {
-      return document.raw
-          .substring(detail.beginElementEnd + 1, detail.endElementStart);
+      if(detail.endElementStart != start){
+        return document.raw
+            .substring(detail.beginElementEnd + 1, detail.endElementStart);
+      }else{
+        return "";
+      }
     }
     return "";
   }

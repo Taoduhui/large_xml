@@ -52,6 +52,8 @@ void main() {
     child.innerValue = "<n k=\"v\" t='v'/>";
     expect(child.innerXML, "&lt;n k=&quot;v&quot; t=&apos;v&apos;/&gt;");
     expect(info.name, "info");
+    var person = doc.root.into(type: XmlElementType.start)!;
+    expect(person.innerXML, "");
   });
 
   test('XmlNode inner', () {

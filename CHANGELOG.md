@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.1] 2023-5-18
+### Fixed
+
+- element like <xxx/> innerXML getter bug
+
 ## [1.2.0] 2023-5-14
 ### Added
 
