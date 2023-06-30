@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2] 2023-6-30
+### Changed
+
+- XmlNodeInstance extends XmlNode
+- XmlNodeInstance rename to VirtualXmlNode
+
+
 ## [1.2.1] 2023-5-18
 ### Fixed
 
