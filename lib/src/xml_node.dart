@@ -41,10 +41,11 @@ class XmlNodeDetail {
   }
 }
 
-class XmlNodeInstance {
+class VirtualXmlNode extends XmlNode{
+
   String raw;
 
-  XmlNodeInstance(this.raw);
+  VirtualXmlNode(this.raw) : super(document: XmlDocument.fromString(raw), start: 0);
 
   /// write this node before target node
   XmlNode pasteBefore(XmlNode node) {
@@ -215,21 +216,21 @@ class XmlNode {
   }
 
   /// create a XmlNodeInstance holding of this node's outerXML
-  XmlNodeInstance copy() {
-    return XmlNodeInstance(outerXML);
+  VirtualXmlNode copy() {
+    return VirtualXmlNode(outerXML);
   }
 
   /// create a XmlNodeInstance holding of this node's outerXML and remove origin node
-  XmlNodeInstance cut() {
-    var inst = XmlNodeInstance(outerXML);
+  VirtualXmlNode cut() {
+    var inst = VirtualXmlNode(outerXML);
     remove();
     return inst;
   }
 
   /// create a `XmlNodeInstance` holding new node xml string
   /// you need to paste it
-  static XmlNodeInstance create(String name) {
-    return XmlNodeInstance("<$name/>");
+  static VirtualXmlNode create(String name) {
+    return VirtualXmlNode("<$name/>");
   }
 
   /// return XML including begin element and ending element
